@@ -1,11 +1,12 @@
 package com.example.xuziwei416.hybirddemo;
 
 import android.graphics.Bitmap;
-import android.nfc.Tag;
 import android.util.Log;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import static android.content.ContentValues.TAG;
 
@@ -17,7 +18,6 @@ public class MyAndroidWebViewClient extends WebViewClient {
     public MyAndroidWebViewClient() {
         super();
     }
-
 
     /**
      * Give the host application a chance to take over the control when a new
@@ -44,7 +44,15 @@ public class MyAndroidWebViewClient extends WebViewClient {
      */
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        Log.d(TAG, "shouldOverrideUrlLoading" + request.getUrl());
+        // 拦截判断是否允许跳转链接，域名中是否包含lu.com
+        if(!request.getUrl().getHost().contains("lu.com")) {
+            // 不允许，不跳转
+            Log.d(TAG, "shouldOverrideUrlLoading should failed!");
+            Toast.makeText(view.getContext(), "不允许跳转到该链接", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        // 允许，跳转链接
+        Log.d(TAG, "shouldOverrideUrlLoading should success!");
         return super.shouldOverrideUrlLoading(view, request);
     }
 
@@ -79,6 +87,13 @@ public class MyAndroidWebViewClient extends WebViewClient {
     @Override
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
+        view.evaluateJavascript("javascript:callJS()", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String value) {
+                // 这里回调的value是之前js代码之前的面返回的“Android调用了callJS方法”字符串
+                Log.d(TAG, "onReceiveValue: " + value);
+            }
+        });
         Log.d(TAG, "onPageFinished: ");
     }
 
